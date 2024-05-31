@@ -7,33 +7,26 @@ import { Model } from "mongoose";
 @Injectable()
 export class BlogService {
   blogs: BlogDto[];
-  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {
-    this.blogs = [
-      {
-        title: "Blog 1",
-        excerpt: "NESTJS",
-        description: "Blog 1 Description",
-      },
-      {
-        title: "Blog 1",
-        excerpt: "NEXTJS",
-        description: "Blog 2 Description",
-      },
-      {
-        title: "Blog 1",
-        excerpt: "NUXTJS",
-        description: "Blog 3 Description",
-      },
-    ];
-  }
+  constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {}
   async getAllBlogs() {
     return this.blogModel.find({});
   }
   async create(dto: BlogDto) {
-    return this.blogModel.create(dto);
+    function slugify(text: string) {
+      return text
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w\-]+/g, "")
+        .replace(/\-\-+/g, "-")
+        .replace(/^-+/, "")
+        .replace(/-+$/, "");
+    }
+    return this.blogModel.create({ ...dto, slug: slugify(dto.title) });
   }
   async getById(id: string) {
-    return this.blogModel.findById(id);
+    return this.blogModel.findOne({ slug: id });
   }
   async update(id: string, dto: BlogDto) {
     return this.blogModel.findByIdAndUpdate(id, dto, { new: true });
